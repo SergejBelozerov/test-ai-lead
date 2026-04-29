@@ -1,0 +1,279 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-qualifier",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cf4405b8-840a-4f3a-8d47-0ec9e5d52f26",
+      "name": "Webhook",
+      "webhookId": "a54bc683-b93b-4dc6-af4d-3fe4b51cd912"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://saggy-turkey-prize.ngrok-free.dev/callback",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "ngrok-skip-browser-warning",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "company",
+              "value": "={{ $json.company }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "score",
+              "value": "={{$json.score}}"
+            },
+            {
+              "name": "status",
+              "value": "={{$json.status}}"
+            },
+            {
+              "name": "reason",
+              "value": "={{$json.reason}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        880,
+        0
+      ],
+      "id": "4457ec76-1cab-4f8c-bb4e-51e6e96a665d",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "GPT-5"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a strict lead scoring assistant.\n\nYou score ONLY how closely the message matches the target product.\n\nTARGET PRODUCT:\nOriginal blue Labubu toy.\n\nMAIN RULE:\nThe score is based on Labubu relevance, NOT on general buying intent.\n\nCRITICAL RULE:\nIf the message does not clearly ask about Labubu toy, the score must be 1-3.\nEven if the person clearly wants to buy something, it must stay 1-3 if the product is not Labubu.\n\nUse only the Message field for scoring.\nIgnore Name and Company for scoring.\n\nSTEP 1: Detect whether the message is about Labubu toy.\n\nLabubu keywords:\nLabubu, labubu, лабубу, лабуба, лабубу\n\nIf there is no Labubu keyword in the message:\n- score must be 1-3\n- status must be \"not_qualified\"\n\nSTEP 2: Reject unrelated products.\n\nIf the message is about any of these products, score must be 1-3:\ncar, машина, авто, garage, гараж, phone, телефон, iPhone, laptop, ноутбук, furniture, мебель, office chair, кресло, Barbie, Барби, robot, робот, delivery of car, casino, crypto, крипта, spam, random text.\n\nIf the message says \"not Labubu\", \"не Labubu\", \"не лабубу\":\n- score must be 1-3\n- status must be \"not_qualified\"\n\nSTEP 3: Labubu accessory rule.\n\nIf the message is about Labubu accessories only, not the Labubu toy itself, score must be 3-4:\nbackpack, рюкзак, stickers, наклейки, clothes, одежда, case, чехол, print, принт.\n\nSTEP 4: Selling/exchange rule.\n\nIf the person wants to sell Labubu, exchange Labubu, or give away Labubu:\n- score must be 1-3\n- status must be \"not_qualified\"\n\nSTEP 5: Fake Labubu rule.\n\nIf the person wants fake, replica, copy, counterfeit, imitation, cheap fake Labubu:\nkeywords: fake, replica, copy, counterfeit, подделка, подделку, копия, реплика, підробка, дешевая копия\n- score must be 4\n- status must be \"not_qualified\"\n\nSCORING RULES:\n10 = wants to buy an original blue Labubu.\n9 = wants to buy an original Labubu, but blue color is not specified.\n8 = wants to buy Labubu toy, but originality and color are not specified.\n7 = wants blue Labubu toy, but originality is not specified.\n6 = wants red Labubu toy, but originality is not specified.\n5 = asks about Labubu toy vaguely, asks about another Labubu color, asks price/availability without strong buying intent.\n4 = wants fake / replica / copy / counterfeit Labubu.\n3 = Labubu accessory only, or very weak Labubu-related request.\n1-2 = unrelated product, spam, meaningless text, casino, crypto, random message.\n\nSTATUS RULES:\nscore 8-10 => \"qualified\"\nscore 1-7 => \"not_qualified\"\n\nIMPORTANT:\nNever give score 8-10 to cars, garages, phones, laptops, furniture, Barbie, robots, accessories, casino, crypto, or any non-Labubu-toy request.\nNever give score 8-10 just because the message says \"I want to buy\".\nThe product must be Labubu toy.\n\nLead:\nName: {{$json.body.name}}\nCompany: {{$json.body.company}}\nMessage: {{$json.body.message}}\n\nReturn ONLY valid JSON.\n\nReturn exactly this JSON structure:\n{\n  \"score\": 1,\n  \"status\": \"not_qualified\",\n  \"reason\": \"short reason\"\n}\n\nReason must be short and product-based.\nGood reasons:\n- \"Original blue Labubu request\"\n- \"Original Labubu request\"\n- \"Generic Labubu purchase request\"\n- \"Blue Labubu without originality\"\n- \"Fake Labubu request\"\n- \"Labubu accessory only\"\n- \"Unrelated car request\"\n- \"Unrelated phone request\"\n- \"Unrelated furniture request\"\n- \"Spam or meaningless message\"\n\nDo not return markdown.\nDo not wrap JSON in a code block.\nDo not add extra text."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        0
+      ],
+      "id": "a309ac60-3ea1-43db-88dc-39d4326bb173",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "gJVBmR5arFsiPREf",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output?.[0]?.content?.[0]?.text;\n\nif (!raw) {\n  throw new Error(\"OpenAI output text not found. Code node must receive data from OpenAI node.\");\n}\n\nconst ai = JSON.parse(raw);\n\nconst originalLead = $(\"Webhook\").first().json.body;\n\nreturn [\n  {\n    json: {\n      name: originalLead.name,\n      company: originalLead.company,\n      message: originalLead.message,\n      score: ai.score,\n      status: ai.status,\n      reason: ai.reason\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "66de2384-581a-44a6-8e0e-a79ee70bd7b1",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-qualifier-1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        256
+      ],
+      "id": "23e7cfa0-49b0-4309-9e00-d72b6069d530",
+      "name": "Webhook1",
+      "webhookId": "a54bc683-b93b-4dc6-af4d-3fe4b51cd912"
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = $json.body;\n\nconst msg = (lead.message || \"\").toLowerCase();\n\nlet score = 1;\nlet status = \"not_qualified\";\nlet reason = \"not relevant or unclear request\";\n\nconst hasLabubu =\n  msg.includes(\"labubu\") ||\n  msg.includes(\"лабубу\");\n\nconst wantsBuy =\n  msg.includes(\"хочу купить\") ||\n  msg.includes(\"куплю\") ||\n  msg.includes(\"заказать\") ||\n  msg.includes(\"готов оплатить\") ||\n  msg.includes(\"готов забрать\");\n\nconst wantsOriginal =\n  msg.includes(\"оригинал\") ||\n  msg.includes(\"оригинальную\") ||\n  msg.includes(\"оригинальный\");\n\nconst hasDetails =\n  msg.includes(\"син\") ||\n  msg.includes(\"красн\") ||\n  msg.includes(\"зел\") ||\n  msg.includes(\"фиолет\") ||\n  msg.includes(\"больш\") ||\n  msg.includes(\"малень\") ||\n  msg.includes(\"цвет\") ||\n  msg.includes(\"размер\") ||\n  msg.includes(\"коробк\");\n\nif (hasLabubu && wantsBuy && wantsOriginal && hasDetails) {\n  score = 10;\n  status = \"qualified\";\n  reason = \"clear purchase intent for original Labubu with details\";\n} else if (hasLabubu && wantsBuy && wantsOriginal) {\n  score = 9;\n  status = \"qualified\";\n  reason = \"clear purchase intent for original Labubu\";\n} else if (hasLabubu && wantsBuy) {\n  score = 8;\n  status = \"qualified\";\n  reason = \"clear Labubu purchase intent\";\n} else if (\n  hasLabubu &&\n  (\n    msg.includes(\"сколько\") ||\n    msg.includes(\"цена\") ||\n    msg.includes(\"есть\") ||\n    msg.includes(\"налич\")\n  )\n) {\n  score = 6;\n  status = \"qualified\";\n  reason = \"interested in Labubu but purchase intent is not fully clear\";\n} else if (hasLabubu) {\n  score = 5;\n  status = \"qualified\";\n  reason = \"mentions Labubu but intent is weak\";\n} else if (\n  msg.includes(\"игрушк\") ||\n  msg.includes(\"подарок\") ||\n  msg.includes(\"ребён\") ||\n  msg.includes(\"ребен\")\n) {\n  score = 4;\n  status = \"not_qualified\";\n  reason = \"general toy interest without Labubu\";\n} else {\n  score = 2;\n  status = \"not_qualified\";\n  reason = \"request is unrelated to Labubu\";\n}\n\nreturn [\n  {\n    json: {\n      name: lead.name,\n      company: lead.company,\n      message: lead.message,\n      score,\n      status,\n      reason\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        256
+      ],
+      "id": "6a1d2ffc-7a3f-4ce2-b7a4-7aab1f86d72a",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://saggy-turkey-prize.ngrok-free.dev/callback",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "ngrok-skip-browser-warning",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "company",
+              "value": "={{ $json.company }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "score",
+              "value": "={{$json.score}}"
+            },
+            {
+              "name": "status",
+              "value": "={{$json.status}}"
+            },
+            {
+              "name": "reason",
+              "value": "={{$json.reason}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        880,
+        256
+      ],
+      "id": "ab3c0545-e7c3-4815-a5f3-03b09e80c9e1",
+      "name": "HTTP Request2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "073163d8-f4de-4f84-954b-d9afaf8cb4d3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f18e069a15c2b0484f34c25bed90edf1b196e454afa114bf6106a05022242370"
+  },
+  "id": "5SMOiRV4BjJjXSPY",
+  "tags": [
+    {
+      "updatedAt": "2026-04-28T18:28:05.971Z",
+      "createdAt": "2026-04-28T18:28:05.971Z",
+      "id": "58NJRiAvoS61JVKd",
+      "name": "AI Lead Qualifier"
+    }
+  ]
+}
